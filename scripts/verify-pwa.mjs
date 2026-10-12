@@ -1,0 +1,18 @@
+import { readFile, stat } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import { resolve } from 'node:path';
+const root = resolve(process.env.MOOD_OUT_DIR || 'dist');
+const manifest = JSON.parse(await readFile(resolve(root, 'manifest.webmanifest'), 'utf8'));
+for (const key of ['id', 'scope', 'start_url']) assert.equal(manifest[key], '/MoodTracker/');
+assert.equal(manifest.display, 'standalone');
+for (const icon of manifest.icons) assert.ok((await stat(resolve(root, icon.src))).size > 500);
+const sw = await readFile(resolve(root, 'sw.js'), 'utf8');
+assert.ok(sw.includes('moodtracker-shell-v1-'));
+assert.ok(sw.includes('MOODTRACKER_APPLY_UPDATE'));
+assert.ok(sw.includes("cache: 'reload'"));
+assert.ok(!sw.includes('indexedDB.deleteDatabase'));
+const html = await readFile(resolve(root, 'index.html'), 'utf8');
+assert.ok(html.includes('/MoodTracker/manifest.webmanifest'));
+assert.ok(!/https?:\/\//.test(html));
+assert.equal(await readFile(resolve(root, '404.html'), 'utf8'), html);
+console.log('PWA verification passed: stable manifest identity, icons, base path, scoped shell and safe update handler.');

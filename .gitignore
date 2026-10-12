@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dist-upgrade/
+test-results/
+playwright-report/
+qa-artifacts/
+.env*
+*.local
+*.zip
+*.log
